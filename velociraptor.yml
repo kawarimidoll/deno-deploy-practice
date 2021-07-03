@@ -1,8 +1,10 @@
 allow:
   - write=app.log
-  # - read=.env,.env.example,.env.defaults
+  # - read
   # - env
   # - net
+# envFile:
+#   - .env
 
 scripts:
   start:
@@ -10,9 +12,9 @@ scripts:
     cmd: main.ts
   # test: deno test
   lint: deno lint
-  format: deno fmt
+  fmt: deno fmt
   pre-commit:
     cmd:
       - vr lint
-      - vr format
+      - vr fmt
     gitHook: pre-commit
