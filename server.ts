@@ -7,6 +7,8 @@ addEventListener("fetch", (event) => {
   console.log({ host, pathname, params });
 
   console.log(Deno.env.toObject());
+  console.log(Deno.env.get("SECRET_TOKEN"));
+  console.log(Deno.env.get("SECRET_TOKEN2"));
 
   const message = "Hello Deno Deploy!";
 
