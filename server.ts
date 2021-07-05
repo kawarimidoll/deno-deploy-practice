@@ -6,6 +6,8 @@ addEventListener("fetch", (event) => {
 
   console.log({ host, pathname, params });
 
+  console.log(Deno.env.toObject());
+
   const message = "Hello Deno Deploy!";
 
   if (pathname.endsWith(".json")) {
