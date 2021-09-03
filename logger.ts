@@ -23,10 +23,12 @@ type LevelName = keyof typeof logStyles;
 function output(date: Date, logLevel: LevelName, msg: unknown[]) {
   const logger = logLevel === "critical" ? console.error : console[logLevel];
   logger(
-    logStyles[logLevel](`${toISO8601String(date)} ${logLevel.toUpperCase()}`),
+    logStyles[logLevel](
+      `${toISO8601String(date)} ${logLevel.toUpperCase().padEnd(5)}`,
+    ),
+    ...msg,
+    // "\n",
   );
-  logger(...msg);
-  logger();
 }
 
 const log = {
