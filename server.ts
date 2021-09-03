@@ -1,14 +1,15 @@
 /// <reference path="./deploy.d.ts" />
+import { log } from "./logger.ts";
 
 addEventListener("fetch", (event) => {
   const { host, pathname, searchParams } = new URL(event.request.url);
   const params = Object.fromEntries([...searchParams.entries()]);
 
-  console.log({ host, pathname, params });
+  log.info({ host, pathname, params });
 
-  console.log(Deno.env.toObject());
-  console.log(Deno.env.get("SECRET_TOKEN"));
-  console.log(Deno.env.get("SECRET_TOKEN2"));
+  log.debug(Deno.env.toObject());
+  log.warn(Deno.env.get("SECRET_TOKEN"));
+  log.warn(Deno.env.get("SECRET_TOKEN2"));
 
   const message = "Hello Deno Deploy!";
 
@@ -18,6 +19,12 @@ addEventListener("fetch", (event) => {
     });
     event.respondWith(response);
     return;
+  }
+
+  if (pathname === "/error") {
+    log.error("error!");
+  } else if (pathname === "/critical") {
+    log.critical("critical!");
   }
 
   const response = new Response(message + " from " + pathname, {
