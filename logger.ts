@@ -20,33 +20,59 @@ const logStyles = {
 };
 type LevelName = keyof typeof logStyles;
 
+function getLogger(logLevel: LevelName) {
+  return logLevel === "critical" ? console.error : console[logLevel];
+}
+
 function output(date: Date, logLevel: LevelName, msg: unknown[]) {
-  const logger = logLevel === "critical" ? console.error : console[logLevel];
-  logger(
+  getLogger(logLevel)(
     logStyles[logLevel](
       `${toISO8601String(date)} ${logLevel.toUpperCase().padEnd(5)}`,
     ),
     ...msg,
-    // "\n",
   );
 }
 
-const log = {
-  debug: (...msg: unknown[]) => {
-    output(new Date(), "debug", msg);
-  },
-  info: (...msg: unknown[]) => {
-    output(new Date(), "info", msg);
-  },
-  warn: (...msg: unknown[]) => {
-    output(new Date(), "warn", msg);
-  },
-  error: (...msg: unknown[]) => {
-    output(new Date(), "error", msg);
-  },
-  critical: (...msg: unknown[]) => {
-    output(new Date(), "critical", msg);
-  },
-};
+function debug(...msg: unknown[]) {
+  output(new Date(), "debug", msg);
+}
+function info(...msg: unknown[]) {
+  output(new Date(), "info", msg);
+}
+function warn(...msg: unknown[]) {
+  output(new Date(), "warn", msg);
+}
+function error(...msg: unknown[]) {
+  output(new Date(), "error", msg);
+}
+function critical(...msg: unknown[]) {
+  output(new Date(), "critical", msg);
+}
+function debugN(...msg: unknown[]) {
+  debug(...msg, "\n");
+}
+function infoN(...msg: unknown[]) {
+  info(...msg, "\n");
+}
+function warnN(...msg: unknown[]) {
+  warn(...msg, "\n");
+}
+function errorN(...msg: unknown[]) {
+  error(...msg, "\n");
+}
+function criticalN(...msg: unknown[]) {
+  critical(...msg, "\n");
+}
 
-export { log };
+export const log = {
+  debug,
+  info,
+  warn,
+  error,
+  critical,
+  debugN,
+  infoN,
+  warnN,
+  errorN,
+  criticalN,
+};
