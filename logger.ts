@@ -1,7 +1,7 @@
 import {
   blue,
-  bold,
   red,
+  reset,
   yellow,
 } from "https://deno.land/std@0.106.0/fmt/colors.ts";
 
@@ -11,26 +11,30 @@ function toISO8601String(datetime: Date): string {
     d.toString().replace(/^.*GMT([-+]\d{2})(\d{2}).*$/, "$1:$2");
 }
 
-const logStyles = {
-  debug: (msg: string) => msg,
-  info: blue,
-  warn: yellow,
-  error: red,
-  critical: (msg: string) => bold(red(msg)),
+const LOG_LEVELS = {
+  debug: {
+    color: reset,
+    symbol: "✔",
+  },
+  info: {
+    color: blue,
+    symbol: "ℹ",
+  },
+  warn: {
+    color: yellow,
+    symbol: "⚠",
+  },
+  error: {
+    color: red,
+    symbol: "✖",
+  },
 };
-type LevelName = keyof typeof logStyles;
 
-function getLogger(logLevel: LevelName) {
-  return logLevel === "critical" ? console.error : console[logLevel];
-}
+type LevelName = keyof typeof LOG_LEVELS;
 
 function output(date: Date, logLevel: LevelName, msg: unknown[]) {
-  getLogger(logLevel)(
-    logStyles[logLevel](
-      `${toISO8601String(date)} ${logLevel.toUpperCase().padEnd(5)}`,
-    ),
-    ...msg,
-  );
+  const { color, symbol } = LOG_LEVELS[logLevel];
+  console[logLevel](color(`${toISO8601String(date)} ${symbol}`), ...msg);
 }
 
 function debug(...msg: unknown[]) {
@@ -45,9 +49,6 @@ function warn(...msg: unknown[]) {
 function error(...msg: unknown[]) {
   output(new Date(), "error", msg);
 }
-function critical(...msg: unknown[]) {
-  output(new Date(), "critical", msg);
-}
 function debugN(...msg: unknown[]) {
   debug(...msg, "\n");
 }
@@ -60,19 +61,14 @@ function warnN(...msg: unknown[]) {
 function errorN(...msg: unknown[]) {
   error(...msg, "\n");
 }
-function criticalN(...msg: unknown[]) {
-  critical(...msg, "\n");
-}
 
 export const log = {
   debug,
   info,
   warn,
   error,
-  critical,
   debugN,
   infoN,
   warnN,
   errorN,
-  criticalN,
 };
