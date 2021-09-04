@@ -32,43 +32,58 @@ const LOG_LEVELS = {
 
 type LevelName = keyof typeof LOG_LEVELS;
 
-function output(date: Date, logLevel: LevelName, msg: unknown[]) {
-  const { color, symbol } = LOG_LEVELS[logLevel];
-  console[logLevel](color(`${toISO8601String(date)} ${symbol}`), ...msg);
-}
+type ShowLevelName = "none" | "full" | "initial" | "symbol";
 
-function debug(...msg: unknown[]) {
-  output(new Date(), "debug", msg);
-}
-function info(...msg: unknown[]) {
-  output(new Date(), "info", msg);
-}
-function warn(...msg: unknown[]) {
-  output(new Date(), "warn", msg);
-}
-function error(...msg: unknown[]) {
-  output(new Date(), "error", msg);
-}
-function debugN(...msg: unknown[]) {
-  debug(...msg, "\n");
-}
-function infoN(...msg: unknown[]) {
-  info(...msg, "\n");
-}
-function warnN(...msg: unknown[]) {
-  warn(...msg, "\n");
-}
-function errorN(...msg: unknown[]) {
-  error(...msg, "\n");
-}
+export class Log {
+  minLogLevel: LevelName;
+  showLevelName: ShowLevelName;
+  showTimestamp: boolean;
+  addNewLine: boolean;
 
-export const log = {
-  debug,
-  info,
-  warn,
-  error,
-  debugN,
-  infoN,
-  warnN,
-  errorN,
-};
+  constructor({
+    minLogLevel = "debug",
+    showLevelName = "symbol",
+    showTimestamp = true,
+    addNewLine = false,
+  }: {
+    minLogLevel?: LevelName;
+    showLevelName?: ShowLevelName;
+    showTimestamp?: boolean;
+    addNewLine?: boolean;
+  } = {}) {
+    this.minLogLevel = minLogLevel;
+    this.showLevelName = showLevelName;
+    this.showTimestamp = showTimestamp;
+    this.addNewLine = addNewLine;
+  }
+
+  output(date: Date, logLevel: LevelName, msg: unknown[]) {
+    const { color } = LOG_LEVELS[logLevel];
+    const timestamp = this.showTimestamp ? toISO8601String(date) : "";
+    const level = {
+      none: "",
+      full: " " + logLevel.toUpperCase().padEnd(5),
+      initial: " " + logLevel[0].toUpperCase(),
+      symbol: " " + LOG_LEVELS[logLevel].symbol,
+    }[this.showLevelName];
+
+    console[logLevel](
+      color(`${timestamp}${level}`),
+      ...msg,
+      ...[this.addNewLine ? "\n" : ""],
+    );
+  }
+
+  debug(...msg: unknown[]) {
+    this.output(new Date(), "debug", msg);
+  }
+  info(...msg: unknown[]) {
+    this.output(new Date(), "info", msg);
+  }
+  warn(...msg: unknown[]) {
+    this.output(new Date(), "warn", msg);
+  }
+  error(...msg: unknown[]) {
+    this.output(new Date(), "error", msg);
+  }
+}
