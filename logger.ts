@@ -6,30 +6,30 @@ import {
 } from "https://deno.land/std@0.106.0/fmt/colors.ts";
 import { datetime } from "https://deno.land/x/ptera@v1.0.0-beta/mod.ts";
 
-export type LevelName = keyof typeof Log.LEVELS;
+const LOG_LEVELS = {
+  debug: {
+    color: reset,
+    symbol: "✔",
+  },
+  info: {
+    color: blue,
+    symbol: "ℹ",
+  },
+  warn: {
+    color: yellow,
+    symbol: "⚠",
+  },
+  error: {
+    color: red,
+    symbol: "✖",
+  },
+};
+
+export type LogLevel = keyof typeof LOG_LEVELS;
 
 export class Log {
-  static readonly LEVELS = {
-    debug: {
-      color: reset,
-      symbol: "✔",
-    },
-    info: {
-      color: blue,
-      symbol: "ℹ",
-    },
-    warn: {
-      color: yellow,
-      symbol: "⚠",
-    },
-    error: {
-      color: red,
-      symbol: "✖",
-    },
-  };
-
-  private fmt: string;
-  private levelSign: (logLevel: LevelName) => string;
+  readonly datetimeFormat: string;
+  private levelSign: (logLevel: LogLevel) => string;
   private suffix: string;
 
   constructor({
@@ -38,34 +38,31 @@ export class Log {
     datetimeFormat = "YYYY-MM-ddTHH:mm:ssZ",
     addNewLine = false,
   }: {
-    minLogLevel?: LevelName;
+    minLogLevel?: LogLevel;
     levelIndicator?: "none" | "full" | "initial" | "symbol";
     datetimeFormat?: string;
     addNewLine?: boolean;
   } = {}) {
-    for (const level of Object.keys(Log.LEVELS) as LevelName[]) {
+    for (const level of Object.keys(LOG_LEVELS) as LogLevel[]) {
       if (minLogLevel === level) break;
       this[level] = () => ({});
     }
 
-    this.fmt = datetimeFormat;
+    this.datetimeFormat = datetimeFormat;
     this.suffix = addNewLine ? "\n" : "";
 
     this.levelSign = {
       none: () => "",
-      full: (logLevel: LevelName) => " " + logLevel.toUpperCase().padEnd(5),
-      initial: (logLevel: LevelName) => " " + logLevel[0].toUpperCase(),
-      symbol: (logLevel: LevelName) => " " + Log.LEVELS[logLevel].symbol,
+      full: (logLevel: LogLevel) => " " + logLevel.toUpperCase().padEnd(5),
+      initial: (logLevel: LogLevel) => " " + logLevel[0].toUpperCase(),
+      symbol: (logLevel: LogLevel) => " " + LOG_LEVELS[logLevel].symbol,
     }[levelIndicator];
   }
 
-  timestamp(date: Date) {
-    return datetime(date).format(this.fmt);
-  }
-
-  output(date: Date, logLevel: LevelName, msg: unknown[]) {
-    const prefix = Log.LEVELS[logLevel].color(
-      `${this.timestamp(date)}${this.levelSign(logLevel)}`.trimStart(),
+  output(date: Date, logLevel: LogLevel, msg: unknown[]) {
+    const prefix = LOG_LEVELS[logLevel].color(
+      `${datetime(date).format(this.datetimeFormat)}${this.levelSign(logLevel)}`
+        .trimStart(),
     );
 
     console[logLevel](prefix, ...msg, this.suffix);
