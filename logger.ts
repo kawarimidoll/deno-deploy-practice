@@ -5,13 +5,13 @@ import {
   yellow,
 } from "https://deno.land/std@0.106.0/fmt/colors.ts";
 
-function toISO8601String(datetime: Date): string {
+export function toISO8601String(datetime: Date): string {
   const d = new Date(datetime.getTime() - datetime.getTimezoneOffset() * 6e4);
   return d.toISOString().slice(0, -5) +
     d.toString().replace(/^.*GMT([-+]\d{2})(\d{2}).*$/, "$1:$2");
 }
 
-const LOG_LEVELS = {
+export const LOG_LEVELS = {
   debug: {
     color: reset,
     symbol: "✔",
@@ -30,48 +30,49 @@ const LOG_LEVELS = {
   },
 };
 
-type LevelName = keyof typeof LOG_LEVELS;
-
-type ShowLevelName = "none" | "full" | "initial" | "symbol";
+export type LevelName = keyof typeof LOG_LEVELS;
 
 export class Log {
-  minLogLevel: LevelName;
-  showLevelName: ShowLevelName;
-  showTimestamp: boolean;
-  addNewLine: boolean;
+  private timeFmt = toISO8601String;
+  private levelSign: (logLevel: LevelName) => string;
+  private suffix = "";
 
   constructor({
     minLogLevel = "debug",
-    showLevelName = "symbol",
+    signType = "symbol",
     showTimestamp = true,
     addNewLine = false,
   }: {
     minLogLevel?: LevelName;
-    showLevelName?: ShowLevelName;
+    signType?: "none" | "full" | "initial" | "symbol";
     showTimestamp?: boolean;
     addNewLine?: boolean;
   } = {}) {
-    this.minLogLevel = minLogLevel;
-    this.showLevelName = showLevelName;
-    this.showTimestamp = showTimestamp;
-    this.addNewLine = addNewLine;
+    const levels: LevelName[] = ["debug", "info", "warn", "error"];
+    for (const level of levels) {
+      if (minLogLevel === level) break;
+      this[level] = () => ({});
+    }
+
+    if (!showTimestamp) {
+      this.timeFmt = () => "";
+    }
+    this.suffix = addNewLine ? "\n" : "";
+
+    this.levelSign = {
+      none: () => "",
+      full: (logLevel: LevelName) => " " + logLevel.toUpperCase().padEnd(5),
+      initial: (logLevel: LevelName) => " " + logLevel[0].toUpperCase(),
+      symbol: (logLevel: LevelName) => " " + LOG_LEVELS[logLevel].symbol,
+    }[signType];
   }
 
   output(date: Date, logLevel: LevelName, msg: unknown[]) {
-    const { color } = LOG_LEVELS[logLevel];
-    const timestamp = this.showTimestamp ? toISO8601String(date) : "";
-    const level = {
-      none: "",
-      full: " " + logLevel.toUpperCase().padEnd(5),
-      initial: " " + logLevel[0].toUpperCase(),
-      symbol: " " + LOG_LEVELS[logLevel].symbol,
-    }[this.showLevelName];
-
-    console[logLevel](
-      color(`${timestamp}${level}`),
-      ...msg,
-      ...[this.addNewLine ? "\n" : ""],
+    const prefix = LOG_LEVELS[logLevel].color(
+      `${this.timeFmt(date)}${this.levelSign(logLevel)}`.trimStart(),
     );
+
+    console[logLevel](prefix, ...msg, this.suffix);
   }
 
   debug(...msg: unknown[]) {
