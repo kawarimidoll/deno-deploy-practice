@@ -1,5 +1,8 @@
 /// <reference path="./deploy.d.ts" />
-import { log } from "./logger.ts";
+import { Log } from "./logger.ts";
+const log = new Log({
+  minLogLevel: Deno.env.get("DENO_DEPLOYMENT_ID") ? "info" : "debug",
+});
 
 addEventListener("fetch", (event) => {
   const { host, pathname, searchParams } = new URL(event.request.url);
@@ -23,8 +26,6 @@ addEventListener("fetch", (event) => {
 
   if (pathname === "/error") {
     log.error("error!");
-  } else if (pathname === "/critical") {
-    log.critical("critical!");
   }
 
   const response = new Response(message + " from " + pathname, {
